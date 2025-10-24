@@ -1,5 +1,7 @@
 import argparse
 import os
+from pathlib import Path
+import time
 import torch
 from tqdm import tqdm
 from lit_gpt.model_cache import GPTCache, Config
@@ -96,7 +98,7 @@ def custom_collate(data, pad_id):
     return output
 
 def build_dataloader_func(bs, dataset, local_rank, world_size):
-    sampler = torch.utils.data.DistributedSampler(dataset, num_replicas=world_size, rank=local_rank, shuffle=True)
+    sampler = torch.utils.data.DistributedSampler(dataset, num_replicas=world_size, rank=local_rank, shuffle=False)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         sampler=sampler,
@@ -142,11 +144,13 @@ def get_model_answers(
     dataloader = build_dataloader_func(1, dataset, local_rank, world_size)
     
     for i, test_batch in tqdm(enumerate(dataloader)):
+        data_name = Path(test_batch["path"][0]).stem
+
         cond_pc = test_batch['pc_normal'].to('cuda')
         
         points = cond_pc[0].cpu().numpy()
         point_cloud = trimesh.points.PointCloud(points[..., 0:3])
-        point_cloud.export(f'{output_path}/{local_rank}_{i}_pc.ply')
+        point_cloud.export(f'{output_path}/{data_name}_pc.ply')
         
         output_ids, _ = ar_sample_kvcache(model,
                                 prompt = torch.tensor([[4736]]).to('cuda').repeat(repeat_num,1),
@@ -171,7 +175,7 @@ def get_model_answers(
             
             faces = torch.arange(1, len(vertices) + 1).view(-1, 3)
             mesh = to_mesh(vertices, faces, transpose=False, post_process=True)
-            mesh.export(f'{output_path}/{local_rank}_{i}_{u}_mesh.obj') 
+            mesh.export(f'{output_path}/{data_name}_{u}.obj')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

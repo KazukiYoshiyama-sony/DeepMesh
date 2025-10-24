@@ -44,13 +44,14 @@ class Sample_Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         data = {}
+        data_path = f"{self.path}/{self.uid_list[idx]}"
         if self.uid_list[idx].split(".")[-1] == "obj":
-            mesh         = trimesh.load(f"{self.path}/{self.uid_list[idx]}")
+            mesh         = trimesh.load(data_path)
             verts, faces = mesh.vertices,mesh.faces
             indices      = np.random.choice(50000, self.point_num, replace=False)
             pc_normal    = sample_pc(verts, faces, pc_num=50000, with_normal=True)[indices]
         elif self.uid_list[idx].split(".")[-1] == "ply":
-            pc_path = f"{self.path}/{self.uid_list[idx]}"
+            pc_path = data_path
             points = trimesh.load(pc_path, process=False)
     
             pcd = o3d.geometry.PointCloud()
@@ -65,4 +66,5 @@ class Sample_Dataset(torch.utils.data.Dataset):
                 indices   = np.random.choice(len(pc_normal), self.point_num, replace=False)
                 pc_normal     = pc_normal[indices]
         data['pc_normal'] = torch.tensor(pc_normal)
+        data['path'] = data_path
         return data
