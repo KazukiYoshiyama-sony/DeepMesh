@@ -172,7 +172,6 @@ def get_model_answers(
                                 device='cuda',
                                 output_path=output_path,local_rank=local_rank,i=i)
         et = time.perf_counter() - st # ignore deserialize taking < 1s
-
         et_list.append([data_path, et])
 
         for u in range(repeat_num):
