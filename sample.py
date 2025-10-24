@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from pathlib import Path
 import time
@@ -143,8 +144,17 @@ def get_model_answers(
     dataset    = Sample_Dataset(point_num = point_num,uid_list = uid_list,path=path)
     dataloader = build_dataloader_func(1, dataset, local_rank, world_size)
     
+    et_list = []
+    
     for i, test_batch in tqdm(enumerate(dataloader)):
-        data_name = Path(test_batch["path"][0]).stem
+        data_path = test_batch["path"][0]
+        data_name = Path(data_path).stem
+        
+        print(f'Processing {data_path}')
+
+        if os.path.exists(f'{output_path}/{data_name}_{repeat_num - 1}.obj'):
+            print(f"Skip {data_path}")
+            continue
 
         cond_pc = test_batch['pc_normal'].to('cuda')
         
@@ -152,6 +162,7 @@ def get_model_answers(
         point_cloud = trimesh.points.PointCloud(points[..., 0:3])
         point_cloud.export(f'{output_path}/{data_name}_pc.ply')
         
+        st = time.perf_counter()
         output_ids, _ = ar_sample_kvcache(model,
                                 prompt = torch.tensor([[4736]]).to('cuda').repeat(repeat_num,1),
                                 pc = cond_pc.repeat(repeat_num,1,1),
@@ -160,6 +171,10 @@ def get_model_answers(
                                 context_length=steps,
                                 device='cuda',
                                 output_path=output_path,local_rank=local_rank,i=i)
+        et = time.perf_counter() - st # ignore deserialize taking < 1s
+
+        et_list.append([data_path, et])
+
         for u in range(repeat_num):
             code = output_ids[u][1:]
             index = (code >= 4737).nonzero()
@@ -176,6 +191,10 @@ def get_model_answers(
             faces = torch.arange(1, len(vertices) + 1).view(-1, 3)
             mesh = to_mesh(vertices, faces, transpose=False, post_process=True)
             mesh.export(f'{output_path}/{data_name}_{u}.obj')
+
+    print(et_list)
+    with open(f"./elapsed_time_deepmesh_r{repeat_num}.json", "w") as fp:
+        json.dump(et_list, fp)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
