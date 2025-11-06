@@ -140,6 +140,6 @@ dependencies:
       - scipy==1.13.1
       - transformers==4.31.0
       - tqdm==4.67.1
-      - xformers==0.0.27.post2
+      - xformers==0.0.27.post2 --index-url https://download.pytorch.org/whl/cu118
       - flash-attn==2.7.0.post2
       - ninja==1.11.1.3
