@@ -126,10 +126,11 @@ dependencies:
   - zstandard=0.23.0=py39h08a7858_1
   - pip:
       - numpy==1.26.4
-      - torch==2.4.0
+      - torch==2.4.0 --index-url https://download.pytorch.org/whl/cu118
+      - torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu118
       - beartype==0.19.0
       - trimesh==4.5.3
-      - triton==3.1.0
+      - triton==3.0.0
       - lightning==2.1.2
       - safetensors==0.4.5
       - open3d==0.19.0
@@ -138,7 +139,6 @@ dependencies:
       - scikit-learn==1.2.2
       - scipy==1.13.1
       - transformers==4.31.0
-      - torchvision==0.19.0
       - tqdm==4.67.1
       - xformers==0.0.27.post2
       - flash-attn==2.7.0.post2
