@@ -71,6 +71,8 @@ conda activate deepmesh
 
 ```
 git clone https://github.com/Dao-AILab/flash-attention
+cd flash-attention
+git checkout v2.7.0.post2
 ```
 
 Comment out some lines in `flash-attention/csrc/{rotary,layer_norm,xentropy}/setup.py` to support your own GPU architecture to speed up the build like (e.g., H100):
@@ -100,7 +102,7 @@ if bare_metal_version >= Version("11.8"):
 then,
 
 ```
-cd flash-attention/csrc
+cd csrc
 cd rotary && time pip install .
 cd ../layer_norm && time pip install .
 cd ../xentropy && time pip install .
