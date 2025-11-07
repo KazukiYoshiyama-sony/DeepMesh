@@ -144,8 +144,6 @@ def get_model_answers(
     dataset    = Sample_Dataset(point_num = point_num,uid_list = uid_list,path=path)
     dataloader = build_dataloader_func(1, dataset, local_rank, world_size)
     
-    et_list = []
-    
     for i, test_batch in tqdm(enumerate(dataloader)):
         data_path = test_batch["path"][0]
         data_name = Path(data_path).stem
@@ -172,7 +170,8 @@ def get_model_answers(
                                 device='cuda',
                                 output_path=output_path,local_rank=local_rank,i=i)
         et = time.perf_counter() - st # ignore deserialize taking < 1s
-        et_list.append([data_path, et])
+        with open(f'{output_path}/et_{data_name}.json', "w") as fp:
+            json.dump({"elapsed_time": et}, fp)
 
         for u in range(repeat_num):
             code = output_ids[u][1:]
@@ -191,9 +190,6 @@ def get_model_answers(
             mesh = to_mesh(vertices, faces, transpose=False, post_process=True)
             mesh.export(f'{output_path}/{data_name}_{u}.obj')
 
-    print(et_list)
-    with open(f"./elapsed_time_deepmesh_r{repeat_num}.json", "w") as fp:
-        json.dump(et_list, fp)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
